@@ -1,0 +1,22 @@
+sodo: required
+services:
+  - docker
+  
+before_install:
+  - docker build -t rolfzbinden/react-test -f ./client/Dockerfile.dev ./client
+
+script: 
+  - docker run -e CI=true rolfzbinden/react-test npm run test
+  
+after_success:
+  - docker build -t rolfzbinden/multi-client ./client
+  - docker build -t rolfzbinden/multi-nginx ./nginx
+  - docker build -t rolfzbinden/multi-server ./server
+  - docker build -t rolfzbinden/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" ¦ docker login -u "$DOCKER_ID" --password-stdin
+  # Thake those images and push to docker hub
+  - docker push rolfzbinden/multi-client
+  - docker push rolfzbinden/multi-nginx
+  - docker push rolfzbinden/multi-server
+  - docker push rolfzbinden/multi-worker
